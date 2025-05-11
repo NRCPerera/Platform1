@@ -41,6 +41,16 @@ public class LearningPlanController {
         return ResponseEntity.ok(plans);
     }
 
+    @GetMapping("/my-plans")
+    public ResponseEntity<?> getUserPlans(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String email = extractEmail(authentication);
+        List<LearningPlanDTO> plans = learningPlanService.findByUserEmail(email);
+        return ResponseEntity.ok(plans);
+    }
+
     @PostMapping
     public ResponseEntity<LearningPlan> createPlan(
             @RequestBody LearningPlan plan,

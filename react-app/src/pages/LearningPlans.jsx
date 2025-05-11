@@ -29,11 +29,11 @@ const LearningPlans = () => {
   const fetchPlans = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/learning-plans');
+      const response = await api.get('/api/learning-plans/my-plans');
       setPlans(response.data);
     } catch (err) {
       console.error('Error fetching learning plans:', err);
-      setError('Failed to load learning plans');
+      setError('Failed to load your learning plans');
     } finally {
       setLoading(false);
     }
@@ -132,7 +132,7 @@ const LearningPlans = () => {
 
   const handleCompleteTask = async (taskId) => {
     try {
-      const response = await api.post(`/api/learning-plans/tasks/${taskId}/complete`);
+      const response = await api.post(`/api/learning plplans/tasks/${taskId}/complete`);
       setPlans(plans.map(plan => ({
         ...plan,
         tasks: plan.tasks.map(task => 

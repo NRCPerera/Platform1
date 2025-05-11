@@ -54,6 +54,37 @@ public class LearningPlanService {
         }).collect(Collectors.toList());
     }
 
+    public List<LearningPlanDTO> findByUserEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return learningPlanRepository.findAll().stream()
+                .filter(plan -> plan.getUser().getId().equals(user.getId()))
+                .map(plan -> {
+                    List<TaskDTO> taskDTOs = plan.getTasks().stream().map(task -> 
+                        new TaskDTO(
+                            task.getId(),
+                            task.getDescription(),
+                            task.isCompleted(),
+                            task.getDueDate(),
+                            task.getCompletedAt()
+                        )
+                    ).collect(Collectors.toList());
+
+                    return new LearningPlanDTO(
+                        plan.getId(),
+                        plan.getTopic(),
+                        plan.getResources(),
+                        plan.getTimeline(),
+                        plan.getCreatedAt(),
+                        plan.getStartDate(),
+                        plan.getEndDate(),
+                        plan.isExtended(),
+                        plan.getUser().getName(),
+                        taskDTOs
+                    );
+                }).collect(Collectors.toList());
+    }
+
     public LearningPlan createPlan(String email, LearningPlan plan) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
