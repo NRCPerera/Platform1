@@ -15,9 +15,14 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [bio, setBio] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    bio: '',
+    profilePhoto: null
+  });
   const [isFollowing, setIsFollowing] = useState(false);
-  const [viewMode, setViewMode] = useState('posts'); // 'posts' or 'shared'
+  const [viewMode, setViewMode] = useState('posts');
   const [isCreatePostFormOpen, setIsCreatePostFormOpen] = useState(false);
 
   useEffect(() => {
@@ -29,36 +34,30 @@ const Profile = () => {
       setLoading(true);
       const userResponse = await api.get(`/api/users/${userId}`);
       setUser(userResponse.data);
-      setBio(userResponse.data.bio || '');
-  
+      setFormData({
+        name: userResponse.data.name || '',
+        email: userResponse.data.email || '',
+        bio: userResponse.data.bio || '',
+        profilePhoto: null
+      });
       const postsResponse = await api.get(`/api/users/${userId}/posts`);
-      console.log('Posts API response:', postsResponse);
       setPosts(postsResponse.data);
   
-      console.log('Fetching shared posts for user ID:', userId);
       try {
         const sharedPostsResponse = await api.get(`/api/posts/shared/user/${userId}`);
-        console.log('Shared posts API response status:', sharedPostsResponse.status);
-        console.log('Shared posts response headers:', sharedPostsResponse.headers);
-        console.log('Raw shared posts response data:', sharedPostsResponse.data);
-  
         if (Array.isArray(sharedPostsResponse.data)) {
-          console.log(`Response contains array of length: ${sharedPostsResponse.data.length}`);
           const validSharedPosts = sharedPostsResponse.data.filter(
             sharedPost => sharedPost.originalPost && 
                          sharedPost.originalPost.id && 
                          sharedPost.originalPost.user
           );
-          console.log(`After filtering, ${validSharedPosts.length} of ${sharedPostsResponse.data.length} posts remain`);
           setSharedPosts(validSharedPosts);
         } else {
-          console.error('Shared posts response is not an array:', typeof sharedPostsResponse.data);
           setError('Invalid shared posts response format');
           setSharedPosts([]);
         }
       } catch (sharedPostsError) {
         console.error('Error fetching shared posts:', sharedPostsError);
-        console.error('Error details:', sharedPostsError.response || sharedPostsError.message);
         setError('Failed to load shared posts');
         setSharedPosts([]);
       }
@@ -97,15 +96,34 @@ const Profile = () => {
     }
   };
 
-  const handleUpdateBio = async () => {
+  const handleUpdateProfile = async () => {
     try {
-      await api.patch(`/api/users/${userId}`, { bio });
-      setUser({ ...user, bio });
+      const data = new FormData();
+      if (formData.name) data.append('name', formData.name);
+      if (formData.email) data.append('email', formData.email);
+      if (formData.bio) data.append('bio', formData.bio);
+      if (formData.profilePhoto) data.append('profilePhoto', formData.profilePhoto);
+
+      const response = await api.patch(`/api/users/${userId}`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setUser(response.data);
       setIsEditing(false);
     } catch (err) {
-      console.error('Error updating bio:', err);
-      alert('Failed to update bio');
+      console.error('Error updating profile:', err);
+      alert('Failed to update profile');
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, profilePhoto: e.target.files[0] });
   };
 
   const handlePostCreated = (newPost) => {
@@ -162,7 +180,15 @@ const Profile = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-4">
           <div className="h-20 w-20 rounded-full bg-primary-100 flex items-center justify-center">
-            <User size={32} className="text-primary-700" />
+            {user.profilePhotoUrl ? (
+              <img 
+                src={"http://localhost:8081" + user.profilePhotoUrl} 
+                alt={`${user.name}'s avatar`}
+                className="h-full w-full object-cover" 
+              />
+            ) : (
+              <User size={20} className="text-gray-500" />
+            )}
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900">{user?.name}</h1>
@@ -196,10 +222,10 @@ const Profile = () => {
         
         <div className="mt-4">
           <div className="flex justify-between items-center">
-            <h2 className="font-medium text-gray-900">Bio</h2>
+            <h2 className="font-medium text-gray-900">Profile</h2>
             {isCurrentUser && (
               <button
-                onClick={() => isEditing ? handleUpdateBio() : setIsEditing(true)}
+                onClick={() => isEditing ? handleUpdateProfile() : setIsEditing(true)}
                 className="text-primary-600 hover:text-primary-700"
               >
                 {isEditing ? <Check size={18} /> : <Edit size={18} />}
@@ -208,17 +234,58 @@ const Profile = () => {
           </div>
           
           {isEditing ? (
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              className="w-full mt-2 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-              rows="3"
-              placeholder="Write something about yourself..."
-            />
+            <div className="mt-2 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Enter your name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Enter your email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Bio</label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  rows="3"
+                  placeholder="Write something about yourself..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Profile Photo</label>
+                <input
+                  type="file"
+                  name="profilePhoto"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+            </div>
           ) : (
-            <p className="mt-2 text-gray-700">
-              {user?.bio || (isCurrentUser ? 'Click the edit button to add a bio' : 'No bio yet')}
-            </p>
+            <div className="mt-2 space-y-2">
+              <p className="text-gray-700"><strong>Name:</strong> {user?.name || 'Not set'}</p>
+              <p className="text-gray-700"><strong>Email:</strong> {user?.email || 'Not set'}</p>
+              <p className="text-gray-700"><strong>Bio:</strong> {user?.bio || (isCurrentUser ? 'Click the edit button to add a bio' : 'No bio yet')}</p>
+              <p className="text-gray-700"><strong>Profile Photo:</strong> {user?.profilePhotoUrl ? <a href={"http://localhost:8081" + user.profilePhotoUrl} target="_blank" rel="noopener noreferrer">View Photo</a> : 'Not set'}</p>
+            </div>
           )}
         </div>
       </div>

@@ -20,6 +20,7 @@ public class UserDTO {
     private List<User> following;
     private List<User> followers;
     private String bio;
+    private String profilePhotoUrl;
 
     public UserDTO(Long id, String name, String email) {
         this.id = id;

@@ -1,75 +1,89 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { Trash2, Pencil, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, User, Trash, Edit } from 'lucide-react';
 
-const PostHeader = ({ 
-  post, 
-  isAuthor, 
-  onEdit, 
-  onDelete,
-  loading 
-}) => {
-  const [showActions, setShowActions] = useState(false);
-  
+const PostHeader = ({ post, isAuthor, onEdit, onDelete, loading }) => {
+  const [showOptions, setShowOptions] = React.useState(false);
+
+  // Format date to be more readable
+  const formattedDate = new Date(post.createdAt).toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const toggleOptions = (e) => {
+    e.stopPropagation();
+    setShowOptions(!showOptions);
+  };
+
   return (
-    <div className="flex items-start justify-between">
+    <div className="flex justify-between items-center mb-4">
       <div className="flex items-center gap-3">
         <Link 
-          to={`/profile/${post.user.id}`}
-          className="block transition-transform hover:scale-105"
+          to={`/profile/${post.user.id}`} 
+          className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
-            <span className="font-semibold text-white text-lg">
-              {post.user.name?.charAt(0) || 'U'}
-            </span>
-          </div>
+          {post.user.profilePhotoUrl ? (
+            <img 
+              src={"http://localhost:8081" + post.user.profilePhotoUrl} 
+              alt={`${post.user.name}'s avatar`}
+              className="h-full w-full object-cover" 
+            />
+          ) : (
+            <User size={20} className="text-gray-500" />
+          )}
         </Link>
-        
         <div>
           <Link 
-            to={`/profile/${post.user.id}`} 
-            className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
+            to={`/profile/${post.user.id}`}
+            className="font-medium text-gray-900 hover:underline"
+            onClick={(e) => e.stopPropagation()}
           >
             {post.user.name}
           </Link>
-          <p className="text-sm text-gray-500">
-            {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-          </p>
+          <p className="text-xs text-gray-500">{formattedDate}</p>
         </div>
       </div>
-      
+
       {isAuthor && (
         <div className="relative">
           <button
-            onClick={() => setShowActions(!showActions)}
-            className="text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+            onClick={toggleOptions}
+            className="p-1 rounded-full hover:bg-gray-100"
+            disabled={loading}
           >
-            <MoreHorizontal size={20} />
+            <MoreHorizontal size={20} className="text-gray-500" />
           </button>
-          
-          {showActions && (
-            <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
+
+          {showOptions && (
+            <div 
+              className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg z-10 border border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
-                onClick={() => {
-                  onEdit();
-                  setShowActions(false);
+                onClick={(e) => {
+                  setShowOptions(false);
+                  onEdit(e);
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
               >
-                <Pencil size={16} className="mr-2" />
-                Edit post
+                <Edit size={16} />
+                Edit
               </button>
               <button
-                onClick={() => {
-                  onDelete();
-                  setShowActions(false);
+                onClick={(e) => {
+                  setShowOptions(false);
+                  onDelete(e);
                 }}
+                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
                 disabled={loading}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
               >
-                <Trash2 size={16} className="mr-2" />
-                Delete post
+                <Trash size={16} />
+                {loading ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           )}

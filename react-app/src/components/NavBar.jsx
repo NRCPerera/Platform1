@@ -208,7 +208,15 @@ const Navbar = () => {
                     <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 
                                  flex items-center justify-center text-white font-medium shadow-sm
                                  ring-2 ring-gray-800">
-                      {user.name?.charAt(0) || 'U'}
+                      {user.profilePhotoUrl ? (
+                        <img 
+                          src={"http://localhost:8081"+ user.profilePhotoUrl} 
+                          alt={`${user.name}'s avatar`}
+                          className="h-full w-full object-cover rounded-full" 
+                        />
+                        ) : (
+                          <User size={20} className="text-gray-500" />
+                      )}
                     </div>
                     <span className="text-sm font-medium text-gray-300">{user.name}</span>
                   </button>

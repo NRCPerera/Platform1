@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,9 +43,19 @@ public class AuthController {
         return null;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegistrationRequest registrationRequest) {
-        User user = authService.registerUser(registrationRequest);
+    @PostMapping(value = "/register", consumes = {"multipart/form-data"})
+    public ResponseEntity<AuthResponse> register(
+            @RequestPart("name") String name,
+            @RequestPart("email") String email,
+            @RequestPart("password") String password,
+            @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto) {
+        // Construct RegistrationRequest from form fields
+        RegistrationRequest registrationRequest = new RegistrationRequest();
+        registrationRequest.setName(name);
+        registrationRequest.setEmail(email);
+        registrationRequest.setPassword(password);
+
+        User user = authService.registerUser(registrationRequest, profilePhoto);
         return ResponseEntity.ok(new AuthResponse(user));
     }
 

@@ -5,6 +5,7 @@ import com.skillshare.platform.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,10 +13,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Configuration
@@ -34,23 +37,37 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/users/current", "/api/users/**", "/api/posts/**", "/api/comments/**", "/api/learning-plans/**", "/api/progress-updates/**", "/api/notifications/**").authenticated()
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/logout", "/login").permitAll()
+                .requestMatchers(
+                    "/api/users/current", "/api/users/**", "/api/posts/**", "/api/comments/**",
+                    "/api/learning-plans/**", "/api/progress-updates/**", "/api/notifications/**"
+                ).authenticated()
+                .requestMatchers(
+                    "/api/auth/register", "/api/auth/login", "/logout", "/login",
+                    "/media/**", "/profile-photos/**"
+                ).permitAll()
                 .anyRequest().permitAll()
             )
-            // OAuth2 configuration
+            .formLogin(form -> form
+                .loginProcessingUrl("/api/auth/login") // must match the frontend POST endpoint
+                .usernameParameter("email")            // must match your form field name
+                .passwordParameter("password")
+                .successHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"message\":\"Login successful\"}");
+                })
+                .failureHandler((request, response, exception) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Invalid email or password\"}");
+                })
+                .permitAll()
+            )
             .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
-                .defaultSuccessUrl("http://localhost:5173/auth/callback", true)
-            )
-            // Form login configuration
-            .formLogin(formLogin -> formLogin
-                .loginProcessingUrl("/api/auth/login")
-                .defaultSuccessUrl("http://localhost:5173/auth/callback", true)
-                .failureUrl("/login?error=true")
-                .permitAll()
+                .defaultSuccessUrl("http://localhost:5173", true)
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
@@ -59,8 +76,18 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             );
-        System.out.println("Security configuration loaded");
+
         return http.build();
+    }
+
+
+    @Bean
+    public AuthenticationFailureHandler authenticationFailureHandler() {
+        return (request, response, exception) -> {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Invalid email or password\"}");
+        };
     }
 
     @Bean

@@ -17,9 +17,8 @@ export const AuthProvider = ({ children }) => {
       try {
         const response = await api.get('/api/users/current');
         const userData = response.data;
-        //console.log('Fetched user:', userData);
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);  // Set the full user data in the state
+        localStorage.setItem('user', JSON.stringify(userData)); // Save the full user data to localStorage
       } catch (error) {
         console.error('Failed to fetch user:', error);
         setError('Failed to authenticate. Please try logging in again.');
@@ -49,6 +48,61 @@ export const AuthProvider = ({ children }) => {
     window.location.href = `http://localhost:8081/oauth2/authorization/${provider}`;
   };
 
+  const registerUser = async (formData) => {
+    try {
+      setError(null);
+      const response = await api.post('/api/auth/register', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setUser(response.data.user);
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Registration failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
+  const loginWithCredentials = async (email, password) => {
+  try {
+    setError(null);
+    const response = await api.post(
+      '/api/auth/login', // <-- this must be the actual Spring login endpoint
+      new URLSearchParams({
+        email: email, // must be 'username', not 'email'
+        password: password,
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        withCredentials: true, // important for session-based auth
+      }
+    );
+
+    console.log('Login response:', response.data);
+      setUser(response.data?.user || { email }); // or however you fetch user data
+      return response.data;
+    } catch (err) {
+      let errorMessage = 'Login failed';
+      if (err.response) {
+        if (err.response.status === 401 || err.response.data?.message?.includes('Bad credentials')) {
+          errorMessage = 'Invalid email or password';
+        } else {
+          errorMessage = err.response.data?.message || err.response.data?.error || 'Login failed';
+        }
+      } else {
+        errorMessage = err.message || 'Login failed';
+      }
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
+
   const logout = async () => {
     try {
       console.log('Attempting logout...');
@@ -76,6 +130,8 @@ export const AuthProvider = ({ children }) => {
     error,
     loginWithOAuth,
     logout,
+    registerUser,
+    loginWithCredentials,
   };
 
   return (

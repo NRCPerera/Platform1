@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
@@ -8,7 +8,9 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(null);
   const [localError, setLocalError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,8 +31,31 @@ const Register = () => {
       setLocalError('Password must be at least 6 characters');
       return;
     }
-    
-    await registerUser(name, email, password);
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('password', password);
+    if (profilePhoto) {
+      formData.append('profilePhoto', profilePhoto);
+    }
+
+    try {
+      await registerUser(formData);
+      navigate('/auth/callback'); // Redirect to callback or home page after successful registration
+    } catch (err) {
+      setLocalError(err.message || 'Registration failed');
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setProfilePhoto(file);
+    } else {
+      setLocalError('Please select a valid image file');
+    }
   };
 
   return (
@@ -42,7 +67,7 @@ const Register = () => {
         </div>
         
         {/* Form for manual registration */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit} encType="multipart/form-data">
           {(error || localError) && (
             <div className="text-red-500 text-center">{error || localError}</div>
           )}
@@ -99,8 +124,19 @@ const Register = () => {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                 placeholder="Confirm Password"
+              />
+            </div>
+            <div>
+              <label htmlFor="profile-photo" className="sr-only">Profile Photo</label>
+              <input
+                id="profile-photo"
+                name="profilePhoto"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
               />
             </div>
           </div>

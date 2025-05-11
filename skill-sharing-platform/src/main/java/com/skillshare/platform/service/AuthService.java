@@ -5,12 +5,20 @@ import com.skillshare.platform.dto.RegistrationRequest;
 import com.skillshare.platform.model.User;
 import com.skillshare.platform.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -24,7 +32,10 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    public User registerUser(RegistrationRequest registrationRequest) {
+    @Value("${file.upload-dir:uploads}")
+    private String uploadDir;
+
+    public User registerUser(RegistrationRequest registrationRequest, MultipartFile profilePhoto) {
         // Check if user already exists
         if (userRepository.findByEmail(registrationRequest.getEmail()).isPresent()) {
             throw new RuntimeException("User already exists with email: " + registrationRequest.getEmail());
@@ -38,6 +49,19 @@ public class AuthService {
         user.setProvider("local");
         user.setBio("");
         user.setActive(true);
+
+        // Handle profile photo upload
+        if (profilePhoto != null && !profilePhoto.isEmpty()) {
+            try {
+                String fileName = UUID.randomUUID().toString() + "_" + profilePhoto.getOriginalFilename();
+                Path filePath = Paths.get(uploadDir).toAbsolutePath().normalize().resolve(fileName);
+                Files.createDirectories(filePath.getParent());
+                Files.write(filePath, profilePhoto.getBytes());
+                user.setProfilePhotoUrl("/media/" + fileName);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to upload profile photo", e);
+            }
+        }
 
         return userRepository.save(user);
     }

@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +21,16 @@ public class LearningPlanController {
 
     @Autowired
     private LearningPlanService learningPlanService;
+    
+    private String extractEmail(Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User userDetails) {
+            return userDetails.getUsername(); // form login
+        } else if (principal instanceof OAuth2User oauth2User) {
+            return oauth2User.getAttribute("email"); // OAuth2 login
+        }
+        throw new RuntimeException("Unsupported principal type");
+    }
 
     @GetMapping
     public ResponseEntity<?> getAllPlans(Authentication authentication) {
@@ -34,8 +44,8 @@ public class LearningPlanController {
     @PostMapping
     public ResponseEntity<LearningPlan> createPlan(
             @RequestBody LearningPlan plan,
-            @AuthenticationPrincipal OAuth2User principal) {
-        String email = principal.getAttribute("email");
+            Authentication authentication) {
+        String email = extractEmail(authentication);
         LearningPlan createdPlan = learningPlanService.createPlan(email, plan);
         return ResponseEntity.ok(createdPlan);
     }
@@ -44,8 +54,8 @@ public class LearningPlanController {
     public ResponseEntity<LearningPlan> updatePlan(
             @PathVariable Long id,
             @RequestBody LearningPlan plan,
-            @AuthenticationPrincipal OAuth2User principal) {
-        String email = principal.getAttribute("email");
+            Authentication authentication) {
+        String email = extractEmail(authentication);
         LearningPlan updatedPlan = learningPlanService.updatePlan(id, email, plan);
         return ResponseEntity.ok(updatedPlan);
     }
@@ -53,8 +63,8 @@ public class LearningPlanController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePlan(
             @PathVariable Long id,
-            @AuthenticationPrincipal OAuth2User principal) {
-        String email = principal.getAttribute("email");
+            Authentication authentication) {
+        String email = extractEmail(authentication);
         learningPlanService.deletePlan(id, email);
         return ResponseEntity.ok().build();
     }
@@ -63,8 +73,8 @@ public class LearningPlanController {
     public ResponseEntity<LearningPlan> extendPlan(
             @PathVariable Long id,
             @RequestBody LocalDateTime newEndDate,
-            @AuthenticationPrincipal OAuth2User principal) {
-        String email = principal.getAttribute("email");
+            Authentication authentication) {
+        String email = extractEmail(authentication);
         LearningPlan extendedPlan = learningPlanService.extendPlan(id, email, newEndDate);
         return ResponseEntity.ok(extendedPlan);
     }
@@ -72,8 +82,8 @@ public class LearningPlanController {
     @PostMapping("/tasks/{taskId}/complete")
     public ResponseEntity<Task> completeTask(
             @PathVariable Long taskId,
-            @AuthenticationPrincipal OAuth2User principal) {
-        String email = principal.getAttribute("email");
+            Authentication authentication) {
+        String email = extractEmail(authentication);
         Task completedTask = learningPlanService.completeTask(taskId, email);
         return ResponseEntity.ok(completedTask);
     }

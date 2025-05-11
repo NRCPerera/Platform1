@@ -32,6 +32,9 @@ public class User {
     // Flag to determine if account is active
     private boolean active = true;
 
+    // Profile photo URL
+    private String profilePhotoUrl;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Post> posts = new ArrayList<>();

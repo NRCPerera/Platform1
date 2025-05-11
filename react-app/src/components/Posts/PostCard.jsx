@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import PostHeader from './PostHeader';
 import PostContent from './PostContent';
@@ -8,6 +9,7 @@ import PostEditForm from './PostEditForm';
 import CommentSection from '../CommentSection';
 
 const PostCard = ({ post, currentUser, onDelete, onLike }) => {
+  const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post?.comments?.length || 0);
   const [loading, setLoading] = useState(false);
@@ -25,6 +27,21 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
 
   const isAuthor = currentUser?.id === post.user?.id;
   
+  const handleNavigateToPost = (e) => {
+    // Prevent navigation if the click is on an interactive element
+    if (
+      e.target.closest('button') || 
+      e.target.closest('a') || 
+      isEditing || 
+      showShareModal || 
+      e.target.closest('.comment-section')
+    ) {
+      return;
+    }
+    
+    navigate(`/post/${post.id}`);
+  };
+  
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
     try {
@@ -39,7 +56,10 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
     }
   };
 
-  const handleLike = async () => {
+  const handleLike = async (e) => {
+    // Prevent the click from navigating to post details
+    e.stopPropagation();
+    
     try {
       const response = await api.post(`/api/posts/${post.id}/like`);
       const { liked, likeCount } = response.data;
@@ -93,21 +113,41 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
     setCommentsCount(prev => prev - 1);
   };
 
+  const handleToggleComments = (e) => {
+    e.stopPropagation();
+    setShowComments(!showComments);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-5">
+    <div 
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-5 cursor-pointer"
+      onClick={handleNavigateToPost}
+    >
       <PostHeader 
         post={post}
         isAuthor={isAuthor}
-        onEdit={() => setIsEditing(true)}
-        onDelete={handleDelete}
+        onEdit={(e) => {
+          e.stopPropagation();
+          setIsEditing(true);
+        }}
+        onDelete={(e) => {
+          e.stopPropagation();
+          handleDelete();
+        }}
         loading={loading}
       />
       
       {isEditing ? (
         <PostEditForm 
           content={post.content}
-          onSave={handleSaveEdit}
-          onCancel={() => setIsEditing(false)}
+          onSave={(content, media) => {
+            handleSaveEdit(content, media);
+            setIsEditing(false);
+          }}
+          onCancel={(e) => {
+            e.stopPropagation();
+            setIsEditing(false);
+          }}
         />
       ) : (
         <PostContent 
@@ -121,13 +161,19 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
         commentsCount={commentsCount}
         isLiked={isLiked}
         onLike={handleLike}
-        onToggleComments={() => setShowComments(!showComments)}
+        onToggleComments={handleToggleComments}
         showComments={showComments}
-        onShare={() => setShowShareModal(true)}
+        onShare={(e) => {
+          e.stopPropagation();
+          setShowShareModal(true);
+        }}
       />
       
       {showComments && (
-        <div className="mt-4 pl-3 border-l-2 border-gray-100">
+        <div 
+          className="mt-4 pl-3 border-l-2 border-gray-100 comment-section"
+          onClick={(e) => e.stopPropagation()}
+        >
           <CommentSection
             postId={post.id}
             onCommentAdded={handleCommentAdded}
@@ -138,7 +184,10 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
       )}
 
       {showShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-lg font-semibold mb-4">Share Post</h2>
             <textarea
@@ -151,7 +200,8 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
             />
             <div className="flex justify-end gap-2 mt-4">
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setShowShareModal(false);
                   setShareComment('');
                 }}
@@ -161,7 +211,10 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
                 Cancel
               </button>
               <button
-                onClick={handleShare}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare();
+                }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 disabled={loading}
               >
