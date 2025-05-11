@@ -168,7 +168,15 @@ const PostPage = () => {
                 className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-400 
                            flex items-center justify-center text-white font-medium shadow-md"
               >
-                {post.user.name?.charAt(0) || 'U'}
+                {user.profilePhotoUrl ? (
+                  <img 
+                    src={"http://localhost:8081" + user.profilePhotoUrl} 
+                    alt={`${user.name}'s avatar`}
+                    className="h-full w-full object-cover rounded-full" 
+                  />
+                ) : (
+                  <User size={20} className="text-gray-500" />
+                )}
               </Link>
               <div>
                 <Link to={`/profile/${post.user.id}`} className="text-lg font-medium text-gray-900 hover:underline">

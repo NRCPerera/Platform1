@@ -22,7 +22,7 @@ const CommentSection = ({ postId, onCommentAdded, onCommentDeleted, onCommentEdi
       setLoading(true);
       const response = await api.get(`/api/posts/${postId}/comments`);
       setComments(response.data);
-      console.log('Fetched comments:', response.data);
+      //console.log('Fetched comments:', response.data);
     } catch (err) {
       console.error('Error fetching comments:', err);
       setError('Failed to load comments');

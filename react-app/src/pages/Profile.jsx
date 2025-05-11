@@ -184,7 +184,7 @@ const Profile = () => {
               <img 
                 src={"http://localhost:8081" + user.profilePhotoUrl} 
                 alt={`${user.name}'s avatar`}
-                className="h-full w-full object-cover" 
+                className="h-full w-full object-cover rounded-full" 
               />
             ) : (
               <User size={20} className="text-gray-500" />
