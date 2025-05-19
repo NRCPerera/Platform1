@@ -11,6 +11,8 @@ import NotFound from './pages/NotFound';
 import ProgressUpdates from './pages/ProgressUpdates';
 import Notifications from './pages/Notifications';
 import PostPage from './pages/PostPage';
+import Followers from './pages/Followers';
+import Following from './pages/Following';
 
 function OAuth2Callback() {
   const navigate = useNavigate();
@@ -77,6 +79,8 @@ function App() {
         <Route path="/progress-update" element={<ProgressUpdates />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/post/:id" element={<PostPage />} />
+        <Route path="/profile/:userId/followers" element={<Followers />} />
+        <Route path="/profile/:userId/following" element={<Following />} />
       </Route>
       
       <Route path="*" element={<NotFound />} />

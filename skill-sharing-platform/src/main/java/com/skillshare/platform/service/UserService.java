@@ -30,7 +30,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    // Define the upload directory (configure in application.properties or hardcode for simplicity)
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
 
@@ -57,25 +56,36 @@ public class UserService {
     }
 
     public void followUser(Long userId, Long followId, String email) {
-        User user = userRepository.findById(userId).orElse(null);
-        User followUser = userRepository.findById(followId).orElse(null);
-        if (user != null && followUser != null) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        User followUser = userRepository.findById(followId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + followId));
+
+        // Prevent self-follow
+        if (userId.equals(followId)) {
+            throw new IllegalArgumentException("Users cannot follow themselves");
+        }
+
+        // Check if the user is already following the target user
+        if (!user.getFollowing().contains(followUser)) {
             user.getFollowing().add(followUser);
             followUser.getFollowers().add(user);
             userRepository.save(user);
             userRepository.save(followUser);
         }
+        // If already following, do nothing (idempotent operation)
     }
 
     public void unfollowUser(Long userId, Long followId, String email) {
-        User user = userRepository.findById(userId).orElse(null);
-        User followUser = userRepository.findById(followId).orElse(null);
-        if (user != null && followUser != null) {
-            user.getFollowing().remove(followUser);
-            followUser.getFollowers().remove(user);
-            userRepository.save(user);
-            userRepository.save(followUser);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        User followUser = userRepository.findById(followId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + followId));
+
+        user.getFollowing().remove(followUser);
+        followUser.getFollowers().remove(user);
+        userRepository.save(user);
+        userRepository.save(followUser);
     }
 
     public boolean isFollowing(Long userId, Long followId, String email) {
@@ -126,19 +136,16 @@ public class UserService {
     }
 
     public UserDTO updateUser(Long userId, String name, String email, String bio, MultipartFile profilePhoto, String authEmail) {
-        // Validate user identity
         User authenticatedUser = userRepository.findByEmail(authEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + authEmail));
         
         User userToUpdate = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
         
-        // Security check - only allow users to update their own profile
         if (!authenticatedUser.getId().equals(userId)) {
             throw new AccessDeniedException("You are not allowed to update this user's profile");
         }
         
-        // Update fields if provided
         if (name != null && !name.trim().isEmpty()) {
             userToUpdate.setName(name);
         }
@@ -149,33 +156,26 @@ public class UserService {
             userToUpdate.setBio(bio);
         }
         
-        // Handle profile photo upload
         if (profilePhoto != null && !profilePhoto.isEmpty()) {
             try {
-                // Ensure upload directory exists
                 File dir = new File(uploadDir);
                 if (!dir.exists()) {
                     dir.mkdirs();
                 }
                 
-                // Generate unique filename
                 String fileName = UUID.randomUUID().toString() + "_" + profilePhoto.getOriginalFilename();
                 Path filePath = Paths.get(uploadDir, fileName);
                 
-                // Save file
                 Files.write(filePath, profilePhoto.getBytes());
                 
-                // Set profile photo URL (relative path)
                 userToUpdate.setProfilePhotoUrl("/media/" + fileName);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to upload profile photo", e);
             }
         }
         
-        // Save updated user
         userToUpdate = userRepository.save(userToUpdate);
         
-        // Return updated UserDTO
         return new UserDTO(
             userToUpdate.getId(),
             userToUpdate.getName(),
@@ -185,5 +185,31 @@ public class UserService {
             userToUpdate.getBio(),
             userToUpdate.getProfilePhotoUrl()
         );
+    }
+
+    public List<UserDTO> getFollowers(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getFollowers().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDTO> getFollowing(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getFollowing().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private UserDTO convertToDTO(User user) {
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setEmail(user.getEmail());
+        dto.setBio(user.getBio());
+        dto.setProfilePhotoUrl(user.getProfilePhotoUrl());
+        return dto;
     }
 }

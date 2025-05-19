@@ -29,15 +29,6 @@ spring:
             scope: email,profile
             redirect-uri: http://localhost:8081/login/oauth2/code/google
             authorization-grant-type: authorization_code
-          facebook:
-            client-id: your_facebook_client_id
-            client-secret: your_facebook_client_secret
-            scope: email,public_profile
-            redirect-uri: http://localhost:8081/login/oauth2/code/facebook
-            authorization-grant-type: authorization_code
-        provider:
-          facebook:
-            user-info-uri: https://graph.facebook.com/me?fields=id,name,email
 # AWS S3 Configuration
 aws:
   accessKeyId: AKIA6A7SNCU2WYIEM7JK

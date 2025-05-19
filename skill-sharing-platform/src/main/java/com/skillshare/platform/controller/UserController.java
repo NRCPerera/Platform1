@@ -4,11 +4,6 @@ import com.skillshare.platform.dto.PostDTO;
 import com.skillshare.platform.dto.UserDTO;
 import com.skillshare.platform.model.User;
 import com.skillshare.platform.service.UserService;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +11,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,7 +21,7 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-    
+
     private String extractEmail(Authentication authentication) {
         Object principal = authentication.getPrincipal();
         if (principal instanceof UserDetails userDetails) {
@@ -37,8 +35,6 @@ public class UserController {
     @GetMapping("/current")
     public ResponseEntity<Map<String, Object>> getCurrentUser(Authentication authentication) {
         String email = extractEmail(authentication);
-        System.out.println("Current user email: " + email);
-
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -104,10 +100,8 @@ public class UserController {
             @PathVariable Long id,
             @PathVariable Long followId,
             Authentication authentication) {
-    
         String email = extractEmail(authentication);
         boolean isFollowing = userService.isFollowing(id, followId, email);
-    
         return ResponseEntity.ok(Map.of("isFollowing", isFollowing));
     }
 
@@ -127,8 +121,19 @@ public class UserController {
             Authentication authentication) {
         
         String authEmail = extractEmail(authentication);
-        
         UserDTO updatedUser = userService.updateUser(id, name, email, bio, profilePhoto, authEmail);
         return ResponseEntity.ok(updatedUser);
+    }
+
+    @GetMapping("/{id}/followers")
+    public ResponseEntity<List<UserDTO>> getFollowers(@PathVariable Long id) {
+        List<UserDTO> followers = userService.getFollowers(id);
+        return ResponseEntity.ok(followers);
+    }
+
+    @GetMapping("/{id}/following")
+    public ResponseEntity<List<UserDTO>> getFollowing(@PathVariable Long id) {
+        List<UserDTO> following = userService.getFollowing(id);
+        return ResponseEntity.ok(following);
     }
 }

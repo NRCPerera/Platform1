@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 import PostCard from '../components/Posts/PostCard';
@@ -195,14 +195,18 @@ const Profile = () => {
             <p className="text-gray-600">{user?.email}</p>
             
             <div className="flex gap-4 mt-2">
-              <div>
-                <span className="font-medium">{user?.followers?.length || 0}</span>{' '}
-                <span className="text-gray-600">Followers</span>
-              </div>
-              <div>
-                <span className="font-medium">{user?.following?.length || 0}</span>{' '}
-                <span className="text-gray-600">Following</span>
-              </div>
+              <Link to={`/profile/${userId}/followers`}>
+                <div className="hover:text-blue-600">
+                  <span className="font-medium">{user?.followers?.length || 0}</span>{' '}
+                  <span className="text-gray-600">Followers</span>
+                </div>
+              </Link>
+              <Link to={`/profile/${userId}/following`}>
+                <div className="hover:text-blue-600">
+                  <span className="font-medium">{user?.following?.length || 0}</span>{' '}
+                  <span className="text-gray-600">Following</span>
+                </div>
+              </Link>
             </div>
           </div>
           
