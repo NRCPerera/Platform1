@@ -21,6 +21,7 @@ public class UserDTO {
     private List<User> followers;
     private String bio;
     private String profilePhotoUrl;
+    private Boolean isFollowing;
 
     public UserDTO(Long id, String name, String email) {
         this.id = id;

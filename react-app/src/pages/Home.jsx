@@ -22,7 +22,7 @@ const Home = () => {
       navigate('/login');
       return;
     }
-    console.log('User found:', user);
+    //console.log('User found:', user);
     fetchPosts();
   }, [user, authLoading, navigate]);
 

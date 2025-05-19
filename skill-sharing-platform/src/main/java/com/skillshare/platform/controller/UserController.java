@@ -46,6 +46,8 @@ public class UserController {
         response.put("provider", user.getProvider());
         response.put("active", user.isActive());
         response.put("profilePhotoUrl", user.getProfilePhotoUrl());
+        response.put("followersCount", user.getFollowers() != null ? user.getFollowers().size() : 0);
+        response.put("followingCount", user.getFollowing() != null ? user.getFollowing().size() : 0);
     
         return ResponseEntity.ok(response);
     }
@@ -69,10 +71,21 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getUser(@PathVariable Long id) {
         UserDTO user = userService.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return ResponseEntity.ok(user);
+
+         Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("bio", user.getBio());
+        response.put("profilePhotoUrl", user.getProfilePhotoUrl());
+        response.put("followersCount", user.getFollowers() != null ? user.getFollowers().size() : 0);
+        response.put("followingCount", user.getFollowing() != null ? user.getFollowing().size() : 0);
+    
+        return ResponseEntity.ok(response);
+        
     }
 
     @PostMapping("/{id}/follow/{followId}")
@@ -126,14 +139,26 @@ public class UserController {
     }
 
     @GetMapping("/{id}/followers")
-    public ResponseEntity<List<UserDTO>> getFollowers(@PathVariable Long id) {
-        List<UserDTO> followers = userService.getFollowers(id);
+    public ResponseEntity<List<UserDTO>> getFollowers(
+            @PathVariable Long id,
+            Authentication authentication) {
+        String currentUserEmail = null;
+        if (authentication != null) {
+            currentUserEmail = extractEmail(authentication);
+        }
+        List<UserDTO> followers = userService.getFollowers(id, currentUserEmail);
         return ResponseEntity.ok(followers);
     }
 
     @GetMapping("/{id}/following")
-    public ResponseEntity<List<UserDTO>> getFollowing(@PathVariable Long id) {
-        List<UserDTO> following = userService.getFollowing(id);
+    public ResponseEntity<List<UserDTO>> getFollowing(
+            @PathVariable Long id,
+            Authentication authentication) {
+        String currentUserEmail = null;
+        if (authentication != null) {
+            currentUserEmail = extractEmail(authentication);
+        }
+        List<UserDTO> following = userService.getFollowing(id, currentUserEmail);
         return ResponseEntity.ok(following);
     }
 }

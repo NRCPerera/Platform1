@@ -29,13 +29,18 @@ const Following = () => {
   };
 
   const handleFollowToggle = async (followId) => {
+    if (!currentUser) return;
+    
     try {
       const isFollowing = following.find(f => f.id === followId)?.isFollowing;
+      
       if (isFollowing) {
         await api.delete(`/api/users/${currentUser.id}/follow/${followId}`);
       } else {
         await api.post(`/api/users/${currentUser.id}/follow/${followId}`);
       }
+      
+      // Update local state
       setFollowing(following.map(f => 
         f.id === followId ? { ...f, isFollowing: !isFollowing } : f
       ));

@@ -19,6 +19,7 @@ const Followers = () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/users/${userId}/followers`);
+      console.log('Followers API response:', response.data);
       setFollowers(response.data);
     } catch (err) {
       console.error('Error fetching followers:', err);
@@ -29,13 +30,18 @@ const Followers = () => {
   };
 
   const handleFollowToggle = async (followId) => {
+    if (!currentUser) return;
+    
     try {
       const isFollowing = followers.find(f => f.id === followId)?.isFollowing;
+      
       if (isFollowing) {
         await api.delete(`/api/users/${currentUser.id}/follow/${followId}`);
       } else {
         await api.post(`/api/users/${currentUser.id}/follow/${followId}`);
       }
+      
+      // Update local state
       setFollowers(followers.map(f => 
         f.id === followId ? { ...f, isFollowing: !isFollowing } : f
       ));

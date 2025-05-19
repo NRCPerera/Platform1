@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -35,15 +36,15 @@ public class UserService {
 
     public Optional<UserDTO> findById(Long id) {
         return userRepository.findById(id).map(user -> {
-            return new UserDTO(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getFollowing(),
-                user.getFollowers(),
-                user.getBio(),
-                user.getProfilePhotoUrl()
-            );
+            UserDTO dto = new UserDTO();
+            dto.setId(user.getId());
+            dto.setName(user.getName());
+            dto.setEmail(user.getEmail());
+            dto.setBio(user.getBio());
+            dto.setProfilePhotoUrl(user.getProfilePhotoUrl());
+            dto.setFollowers(user.getFollowers() != null ? new ArrayList<>(user.getFollowers()) : Collections.emptyList());
+            dto.setFollowing(user.getFollowing() != null ? new ArrayList<>(user.getFollowing()) : Collections.emptyList());
+            return dto;
         });
     }
 
@@ -176,30 +177,59 @@ public class UserService {
         
         userToUpdate = userRepository.save(userToUpdate);
         
-        return new UserDTO(
-            userToUpdate.getId(),
-            userToUpdate.getName(),
-            userToUpdate.getEmail(),
-            userToUpdate.getFollowing(),
-            userToUpdate.getFollowers(),
-            userToUpdate.getBio(),
-            userToUpdate.getProfilePhotoUrl()
-        );
+        UserDTO dto = new UserDTO();
+        dto.setId(userToUpdate.getId());
+        dto.setName(userToUpdate.getName());
+        dto.setEmail(userToUpdate.getEmail());
+        dto.setBio(userToUpdate.getBio());
+        dto.setProfilePhotoUrl(userToUpdate.getProfilePhotoUrl());
+        // Optionally set followers/following if needed
+        return dto;
     }
 
-    public List<UserDTO> getFollowers(Long userId) {
+    public List<UserDTO> getFollowers(Long userId, String currentUserEmail) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        User currentUser = null;
+        if (currentUserEmail != null) {
+            currentUser = userRepository.findByEmail(currentUserEmail)
+                    .orElse(null);
+        }
+        
+        final User finalCurrentUser = currentUser;
+        
         return user.getFollowers().stream()
-                .map(this::convertToDTO)
+                .map(follower -> {
+                    UserDTO dto = convertToDTO(follower);
+                    if (finalCurrentUser != null) {
+                        dto.setIsFollowing(finalCurrentUser.getFollowing().contains(follower));
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
-    public List<UserDTO> getFollowing(Long userId) {
+    public List<UserDTO> getFollowing(Long userId, String currentUserEmail) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        User currentUser = null;
+        if (currentUserEmail != null) {
+            currentUser = userRepository.findByEmail(currentUserEmail)
+                    .orElse(null);
+        }
+        
+        final User finalCurrentUser = currentUser;
+        
         return user.getFollowing().stream()
-                .map(this::convertToDTO)
+                .map(following -> {
+                    UserDTO dto = convertToDTO(following);
+                    if (finalCurrentUser != null) {
+                        dto.setIsFollowing(finalCurrentUser.getFollowing().contains(following));
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

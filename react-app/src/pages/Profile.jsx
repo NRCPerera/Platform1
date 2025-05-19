@@ -33,6 +33,7 @@ const Profile = () => {
     try {
       setLoading(true);
       const userResponse = await api.get(`/api/users/${userId}`);
+      //console.log('User API response:', userResponse.data);
       setUser(userResponse.data);
       setFormData({
         name: userResponse.data.name || '',
@@ -197,13 +198,13 @@ const Profile = () => {
             <div className="flex gap-4 mt-2">
               <Link to={`/profile/${userId}/followers`}>
                 <div className="hover:text-blue-600">
-                  <span className="font-medium">{user?.followers?.length || 0}</span>{' '}
+                  <span className="font-medium">{user?.followersCount || 0}</span>{' '}
                   <span className="text-gray-600">Followers</span>
                 </div>
               </Link>
               <Link to={`/profile/${userId}/following`}>
                 <div className="hover:text-blue-600">
-                  <span className="font-medium">{user?.following?.length || 0}</span>{' '}
+                  <span className="font-medium">{user?.followingCount || 0}</span>{' '}
                   <span className="text-gray-600">Following</span>
                 </div>
               </Link>
