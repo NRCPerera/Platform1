@@ -21,7 +21,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col gap-6">
       <Navbar />
-      <div className="container mx-auto px-4 py-20 flex gap-6">  
+      <div className="container mx-auto px-4 py-20 flex gap-6 mt-6">  
         <main className="flex-1 bg-white shadow-lg rounded-2xl p-6">
           <Outlet />
         </main>
