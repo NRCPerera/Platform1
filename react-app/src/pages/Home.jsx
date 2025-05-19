@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 import PostCard from '../components/Posts/PostCard';
-import CreatePostForm from '../components/CreatePostForm';
 
 const Home = () => {
   const { user, loading: authLoading } = useAuth();
