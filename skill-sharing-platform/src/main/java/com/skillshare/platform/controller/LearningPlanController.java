@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -82,10 +83,21 @@ public class LearningPlanController {
     @PostMapping("/{id}/extend")
     public ResponseEntity<LearningPlan> extendPlan(
             @PathVariable Long id,
-            @RequestBody LocalDateTime newEndDate,
+            @RequestBody String newEndDate,
             Authentication authentication) {
         String email = extractEmail(authentication);
-        LearningPlan extendedPlan = learningPlanService.extendPlan(id, email, newEndDate);
+        // Parse the date string (e.g., "2025-05-27T00:00:00" or "2025-05-27")
+        LocalDateTime parsedDateTime;
+        try {
+            if (newEndDate.length() <= 10) { // Handle YYYY-MM-DD
+                parsedDateTime = LocalDateTime.parse(newEndDate + "T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            } else { // Handle full ISO 8601
+                parsedDateTime = LocalDateTime.parse(newEndDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD or YYYY-MM-DDThh:mm:ss");
+        }
+        LearningPlan extendedPlan = learningPlanService.extendPlan(id, email, parsedDateTime);
         return ResponseEntity.ok(extendedPlan);
     }
 

@@ -22,6 +22,10 @@ const LearningPlans = () => {
   const [newTask, setNewTask] = useState('');
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
 
+  // Date picker state for extending plans
+  const [extendPlanId, setExtendPlanId] = useState(null);
+  const [extendDate, setExtendDate] = useState('');
+
   useEffect(() => {
     fetchPlans();
   }, []);
@@ -145,18 +149,39 @@ const LearningPlans = () => {
     }
   };
 
-  const handleExtendPlan = async (planId, currentEndDate) => {
-    const newEndDate = prompt('Enter new end date (YYYY-MM-DD)', 
-      new Date(new Date(currentEndDate).getTime() + 7*24*60*60*1000).toISOString().split('T')[0]);
-    
-    if (!newEndDate) return;
+  const handleExtendPlan = (planId, currentEndDate) => {
+    setExtendPlanId(planId);
+    setExtendDate(
+      new Date(new Date(currentEndDate).getTime() + 7 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0]
+    );
+  };
+
+  const submitExtendPlan = async () => {
+    if (!extendDate) {
+      alert('Please select a date.');
+      return;
+    }
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(extendDate)) {
+      alert('Invalid date format. Please use YYYY-MM-DD (e.g., 2025-05-27).');
+      return;
+    }
 
     try {
-      const response = await api.post(`/api/learning-plans/${planId}/extend`, newEndDate);
-      setPlans(plans.map(plan => plan.id === planId ? response.data : plan));
+      const formattedDateTime = `${extendDate}T00:00:00`;
+      console.log('Sending payload:', JSON.stringify(formattedDateTime));
+      const response = await api.post(`/api/learning-plans/${extendPlanId}/extend`, JSON.stringify(formattedDateTime), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      setPlans(plans.map(plan => (plan.id === extendPlanId ? response.data : plan)));
+      setExtendPlanId(null);
+      setExtendDate('');
     } catch (err) {
       console.error('Error extending plan:', err);
-      alert('Failed to extend plan');
+      alert('Failed to extend plan. Please ensure the date is valid.');
     }
   };
 
@@ -167,7 +192,7 @@ const LearningPlans = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl ">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Learning Plans</h1>
         <button
@@ -461,6 +486,35 @@ const LearningPlans = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal for date picker */}
+      {extendPlanId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Extend Plan</h2>
+            <input
+              type="date"
+              value={extendDate}
+              onChange={(e) => setExtendDate(e.target.value)}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setExtendPlanId(null)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitExtendPlan}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              >
+                Extend
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
