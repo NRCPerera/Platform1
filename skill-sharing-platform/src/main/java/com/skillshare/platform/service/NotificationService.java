@@ -44,6 +44,14 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    public void markAllAsRead(String email) {
+        List<Notification> notifications = notificationRepository.findByUserEmailAndIsReadFalse(email); // Updated method name
+        for (Notification notification : notifications) {
+            notification.setRead(true);
+        }
+        notificationRepository.saveAll(notifications);
+    }
+
     public void deleteNotification(Long notificationId) {
         notificationRepository.deleteById(notificationId);
     }

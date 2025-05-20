@@ -35,14 +35,18 @@ public class NotificationController {
 
     @PutMapping("/{id}/read")
     public void markAsRead(@PathVariable Long id, Authentication authentication) {
-        // Authentication might be needed in service layer for permission checking
         String email = extractEmail(authentication);
         notificationService.markAsRead(id);
     }
 
+    @PutMapping("/read-all")
+    public void markAllAsRead(Authentication authentication) {
+        String email = extractEmail(authentication);
+        notificationService.markAllAsRead(email);
+    }
+
     @DeleteMapping("/{id}")
     public void deleteNotification(@PathVariable Long id, Authentication authentication) {
-        // Authentication might be needed in service layer for permission checking
         String email = extractEmail(authentication);
         notificationService.deleteNotification(id);
     }

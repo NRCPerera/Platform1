@@ -26,22 +26,20 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
   }
 
   const isAuthor = currentUser?.id === post.user?.id;
-  
+
   const handleNavigateToPost = (e) => {
-    // Prevent navigation if the click is on an interactive element
     if (
-      e.target.closest('button') || 
-      e.target.closest('a') || 
-      isEditing || 
-      showShareModal || 
+      e.target.closest('button') ||
+      e.target.closest('a') ||
+      isEditing ||
+      showShareModal ||
       e.target.closest('.comment-section')
     ) {
       return;
     }
-    
     navigate(`/post/${post.id}`);
   };
-  
+
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
     try {
@@ -57,9 +55,7 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
   };
 
   const handleLike = async (e) => {
-    // Prevent the click from navigating to post details
     e.stopPropagation();
-    
     try {
       const response = await api.post(`/api/posts/${post.id}/like`);
       const { liked, likeCount } = response.data;
@@ -89,13 +85,11 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
     try {
       const formData = new FormData();
       formData.append('content', editedContent);
-      
       if (editedMedia) {
         for (let i = 0; i < editedMedia.length; i++) {
           formData.append('mediaFiles', editedMedia[i]);
         }
       }
-      
       await api.put(`/api/posts/update/${post.id}`, formData);
       window.location.reload(); // or refetch posts
     } catch (err) {
@@ -119,11 +113,11 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
   };
 
   return (
-    <div 
+    <div
       className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-5 cursor-pointer"
       onClick={handleNavigateToPost}
     >
-      <PostHeader 
+      <PostHeader
         post={post}
         isAuthor={isAuthor}
         onEdit={(e) => {
@@ -136,9 +130,8 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
         }}
         loading={loading}
       />
-      
       {isEditing ? (
-        <PostEditForm 
+        <PostEditForm
           content={post.content}
           onSave={(content, media) => {
             handleSaveEdit(content, media);
@@ -150,13 +143,12 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
           }}
         />
       ) : (
-        <PostContent 
+        <PostContent
           content={post.content}
           mediaUrls={post.mediaUrls}
         />
       )}
-      
-      <PostActions 
+      <PostActions
         likes={likeCount || 0}
         commentsCount={commentsCount}
         isLiked={isLiked}
@@ -167,10 +159,10 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
           e.stopPropagation();
           setShowShareModal(true);
         }}
+        isAuthor={isAuthor} // Pass isAuthor to PostActions
       />
-      
       {showComments && (
-        <div 
+        <div
           className="mt-4 pl-3 border-l-2 border-gray-100 comment-section"
           onClick={(e) => e.stopPropagation()}
         >
@@ -182,9 +174,8 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
           />
         </div>
       )}
-
       {showShareModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={(e) => e.stopPropagation()}
         >
@@ -215,7 +206,7 @@ const PostCard = ({ post, currentUser, onDelete, onLike }) => {
                   e.stopPropagation();
                   handleShare();
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                class QUESTclassName="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 disabled={loading}
               >
                 {loading ? 'Sharing...' : 'Share'}

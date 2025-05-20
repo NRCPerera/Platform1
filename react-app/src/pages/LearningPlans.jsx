@@ -132,7 +132,7 @@ const LearningPlans = () => {
 
   const handleCompleteTask = async (taskId) => {
     try {
-      const response = await api.post(`/api/learning plplans/tasks/${taskId}/complete`);
+      const response = await api.post(`/api/learning-plans/tasks/${taskId}/complete`);
       setPlans(plans.map(plan => ({
         ...plan,
         tasks: plan.tasks.map(task => 

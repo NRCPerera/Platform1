@@ -35,7 +35,7 @@ public class CommentService {
             comment.getId(),
             comment.getContent(),
             comment.getCreatedAt(),
-            comment.getUser().getName()
+            comment.getUser()
         ))
         .collect(Collectors.toList());
     }

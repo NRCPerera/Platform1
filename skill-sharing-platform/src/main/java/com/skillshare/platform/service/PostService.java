@@ -57,7 +57,7 @@ public class PostService {
                     comment.getId(),
                     comment.getContent(),
                     comment.getCreatedAt(),
-                    comment.getUser().getName()
+                    comment.getUser()
                 );
             }).collect(Collectors.toList());
             
@@ -88,7 +88,7 @@ public class PostService {
                 comment.getId(),
                 comment.getContent(),
                 comment.getCreatedAt(),
-                comment.getUser().getName()
+                comment.getUser()
             );
         }).collect(Collectors.toList());
 
@@ -279,7 +279,7 @@ public class PostService {
                                 comment.getId(),
                                 comment.getContent(),
                                 comment.getCreatedAt(),
-                                comment.getUser().getName()
+                                comment.getUser()
                             ))
                             .collect(Collectors.toList());
                 
@@ -349,7 +349,7 @@ public class PostService {
                     comment.getId(),
                     comment.getContent(),
                     comment.getCreatedAt(),
-                    comment.getUser().getName()
+                    comment.getUser()
                 ))
                 .collect(Collectors.toList());
         

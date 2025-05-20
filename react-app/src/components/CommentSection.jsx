@@ -118,7 +118,15 @@ const CommentSection = ({ postId, onCommentAdded, onCommentDeleted, onCommentEdi
               <div className="flex-shrink-0">
                 <Link to={`/profile/${comment.user?.id}`}>
                   <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                    <span className="font-medium text-primary-700 text-xs">{comment.username?.charAt(0) || 'U'}</span>
+                    {comment.user.profilePhotoUrl ? (
+                        <img 
+                          src={"http://localhost:8081"+ comment.user.profilePhotoUrl} 
+                          alt={`${comment.user.name}'s avatar`}
+                          className="h-full w-full object-cover rounded-full" 
+                        />
+                        ) : (
+                          <User size={20} className="text-gray-500" />
+                      )}
                   </div>
                 </Link>
               </div>
