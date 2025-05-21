@@ -10,32 +10,32 @@ const CreatePostForm = ({ onPostCreated, currentUser }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+  
     if (!content.trim() && mediaFiles.length === 0) {
       setError('Post cannot be empty');
       return;
     }
-    
+  
     try {
       setLoading(true);
       setError('');
-      
+    
       const formData = new FormData();
       formData.append('content', content);
-      
+    
       mediaFiles.forEach(file => {
         formData.append('mediaFiles', file);
       });
-      
+    
       const response = await api.post('/api/posts/posts', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+    
       setContent('');
       setMediaFiles([]);
-      onPostCreated(response.data);
+      onPostCreated(response.data); // Pass the full response.data
     } catch (err) {
       console.error('Error creating post:', err);
       setError('Failed to create post');

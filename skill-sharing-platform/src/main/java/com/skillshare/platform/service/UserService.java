@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class UserService {
@@ -106,6 +107,7 @@ public class UserService {
         if (user == null) return Collections.emptyList();
     
         return user.getPosts().stream()
+            .sorted((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()))
             .map(post -> {
                 List<CommentDTO> commentDTOs = post.getComments().stream()
                     .map(comment -> new CommentDTO(

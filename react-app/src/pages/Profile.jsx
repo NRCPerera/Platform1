@@ -128,7 +128,20 @@ const Profile = () => {
   };
 
   const handlePostCreated = (newPost) => {
-    setPosts([newPost, ...posts]);
+    console.log('New post received:', newPost); // Debug the newPost object
+    const postWithUser = {
+      ...newPost,
+      user: {
+        id: currentUser.id,
+        name: currentUser.name,
+        profilePhotoUrl: currentUser.profilePhotoUrl || null,
+      },
+      likes: newPost.likes || 0, // Ensure likes is set
+      comments: newPost.comments || [], // Ensure comments is set
+      mediaUrls: newPost.mediaUrls || [], // Ensure mediaUrls is set
+      createdAt: newPost.createdAt || new Date().toISOString(), // Fallback for createdAt
+    };
+    setPosts([postWithUser, ...posts]);
     setIsCreatePostFormOpen(false);
   };
 

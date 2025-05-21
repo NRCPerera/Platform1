@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { Trash2, Edit2, X, Check } from 'lucide-react';
+import { Trash2, Edit2, X, Check, User } from 'lucide-react';
 import api from '../utils/api';
 
 const CommentSection = ({ postId, onCommentAdded, onCommentDeleted, onCommentEdited, currentUser }) => {
@@ -22,7 +22,6 @@ const CommentSection = ({ postId, onCommentAdded, onCommentDeleted, onCommentEdi
       setLoading(true);
       const response = await api.get(`/api/posts/${postId}/comments`);
       setComments(response.data);
-      //console.log('Fetched comments:', response.data);
     } catch (err) {
       console.error('Error fetching comments:', err);
       setError('Failed to load comments');
@@ -41,7 +40,16 @@ const CommentSection = ({ postId, onCommentAdded, onCommentDeleted, onCommentEdi
     try {
       setSubmitting(true);
       const response = await api.post(`/api/posts/${postId}/comments`, { content });
-      setComments([...comments, response.data]);
+      console.log('New comment API response:', response.data); // Debug
+      const newComment = {
+        ...response.data,
+        user: {
+          id: currentUser.id,
+          name: currentUser.name,
+          profilePhotoUrl: currentUser.profilePhotoUrl || null,
+        },
+      };
+      setComments([...comments, newComment]);
       setContent('');
       if (onCommentAdded) onCommentAdded();
     } catch (err) {
@@ -116,17 +124,17 @@ const CommentSection = ({ postId, onCommentAdded, onCommentDeleted, onCommentEdi
           {comments.map(comment => (
             <div key={comment.id} className="flex gap-2">
               <div className="flex-shrink-0">
-                <Link to={`/profile/${comment.user?.id}`}>
+                <Link to={`/profile/${comment.user?.id || '#'}`}>
                   <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                    {comment.user.profilePhotoUrl ? (
-                        <img 
-                          src={"http://localhost:8081"+ comment.user.profilePhotoUrl} 
-                          alt={`${comment.user.name}'s avatar`}
-                          className="h-full w-full object-cover rounded-full" 
-                        />
-                        ) : (
-                          <User size={20} className="text-gray-500" />
-                      )}
+                    {comment.user && comment.user.profilePhotoUrl ? (
+                      <img 
+                        src={"http://localhost:8081" + comment.user.profilePhotoUrl} 
+                        alt={`${comment.user.name || 'User'}'s avatar`}
+                        className="h-full w-full object-cover rounded-full" 
+                      />
+                    ) : (
+                      <User size={20} className="text-gray-500" />
+                    )}
                   </div>
                 </Link>
               </div>
@@ -134,14 +142,17 @@ const CommentSection = ({ postId, onCommentAdded, onCommentDeleted, onCommentEdi
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <Link to={`/profile/${comment.user?.id}`} className="font-medium text-gray-900 hover:underline text-sm">
-                        {comment.user?.name}
+                      <Link 
+                        to={`/profile/${comment.user?.id || '#'}`} 
+                        className="font-medium text-gray-900 hover:underline text-sm"
+                      >
+                        {comment.user?.name || 'Unknown User'}
                       </Link>
                       <span className="text-xs text-gray-500 ml-2">
                         {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) : 'just now'}
                       </span>
                     </div>
-                    {(currentUser?.id) && (
+                    {currentUser?.id === comment.user?.id && (
                       <div className="flex space-x-2">
                         <button
                           onClick={() => startEditing(comment)}
@@ -177,7 +188,7 @@ const CommentSection = ({ postId, onCommentAdded, onCommentDeleted, onCommentEdi
                         </button>
                         <button
                           onClick={() => saveEdit(comment.id)}
-                          className="flex items-center bg-primary-600 text-white rounded-md text-xs px-2 py-1 hover:bg-primary-700"
+                          className="flex items-center bg-blue-600 text-white rounded-md text-xs px-2 py-1 hover:bg-blue-700"
                           disabled={!editContent.trim()}
                         >
                           <Check size={14} className="mr-1" />

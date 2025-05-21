@@ -96,9 +96,9 @@ const Navbar = () => {
         ? 'bg-gray-800/90 backdrop-blur-md shadow-lg py-2' 
         : 'bg-gray-800 py-3 shadow-md'
     }`}>
-      <div className="mx-auto px-4 sm:px-6 lg:px-80 items-center">
+      <div className="mx-auto px-4 sm:px-6 lg:px-40 items-center">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-20">
+          <div className="flex items-center gap-20 ml-3">
             <Link to="/" className="flex-shrink-0 flex items-center group">
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 
                              bg-clip-text text-transparent transition-all duration-300
